@@ -1,0 +1,49 @@
+securechannel/
+│
+├── crypto/
+│ │
+│ ├── sha256.py
+│ ├── hmac.py
+│ ├── hkdf.py
+│ ├── chacha20.py
+│ ├── poly1305.py
+│ ├── aead.py
+│ └── x25519.py
+│
+│
+├── protocol/
+│ │
+│ ├── transcript.py
+│ ├── handshake.py
+│ ├── key_schedule.py
+│ ├── replay.py
+│ └── message.py
+│
+│
+├── network/
+│ │
+│ ├── client.py
+│ └── server.py
+│
+│
+├── bonus/
+│ │
+│ └── gui.py
+│
+│
+├── tests/
+│ │
+│ ├── test_sha256.py
+│ ├── test_hmac.py
+│ ├── test_hkdf.py
+│ ├── test_chacha20.py
+│ ├── test_poly1305.py
+│ ├── test_aead.py
+│ └── test_x25519.py
+│
+│
+├── config.json
+├── requirements.txt
+├── README.md
+├── distribution.md
+└── report.pdf
