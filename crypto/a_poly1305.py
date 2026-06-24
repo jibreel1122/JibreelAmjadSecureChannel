@@ -1,5 +1,6 @@
-import math
-
+import math,os,sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from crypto.a_chacha20 import chacha20_block
 def le_bytes_to_num(b):
     return int.from_bytes(b,"little")
 
@@ -18,3 +19,8 @@ def poly1305_mac(msg, key):
         a = (r * a) % p
     a = (a + s) % (1 << 128)
     return num_to_16_le_bytes(a)
+
+def poly1305_key_gen(key,nonce):
+    counter = 0
+    block = chacha20_block(key,counter,nonce)
+    return block[:32]
