@@ -10,36 +10,34 @@ sys.path.append(
 from crypto.j_hmac import hmac_sha256
 
 
-def test_case(key, message, expected):
-    result = hmac_sha256(key.encode(), message.encode()).hex()
+def test_case(name, key, message, expected):
+    result = hmac_sha256(key, message).hex()
 
-    print(f"Testing: {message}")
-
+    print("Testing:", name)
     if result == expected:
         print("PASS\n")
+        return True
     else:
         print("FAIL")
         print("Expected:", expected)
         print("Got     :", result)
         print()
+        return False
 
 
 if __name__ == "__main__":
+    cases = [
+        ("rfc4231 test case 1", b"\x0b" * 20, b"Hi There",
+         "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"),
+        ("rfc4231 test case 2", b"Jefe", b"what do ya want for nothing?",
+         "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"),
+        ("rfc4231 test case 3", b"\xaa" * 20, b"\xdd" * 50,
+         "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"),
+    ]
 
-    test_case(
-        "jibreel",
-        "jibreel",
-        "748161a09b2b2d27511a330cb9207e21641edf14d25f7108b59f5e6e8a8478fb"
-)
+    passed = 0
+    for name, key, message, expected in cases:
+        if test_case(name, key, message, expected):
+            passed = passed + 1
 
-    test_case(
-        "jibreel",
-        "amjad",
-        "c6fe32c0f66e5adc69271d3b7e7bfd44940701b5ecc67869e8562aded627574e"
-    )
-
-    test_case(
-        "jibreel",
-        "110 out of 100",
-        "e362796cbd093fd4776363a76a658f5149c24f2f2c60ddd2e8684f15d9a7dc24"
-    )
+    print("hmac tests passed", passed, "of", len(cases))
