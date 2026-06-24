@@ -46,14 +46,14 @@ def chacha20_block(key,counter,nonce):
     nonce_words=[int.from_bytes(nonce[i:i+4],'little')for i in range(0,12,4)]
     state=constants+key_words+[counter]+nonce_words
     initial_state=state.copy()
-    for i in range(10):
+    for i in range(0,10):
         inner_block(state)
     for i in range(16):
         state[i]=(state[i]+initial_state[i])&max_int
     return serialize(state)
 def chacha20_encrypt(key,counter,nonce,plaintext):
     encrypted_message=b""
-    for j in range(len(plaintext)//64):
+    for j in range(0,len(plaintext)//64):
         key_stream=chacha20_block(key,counter+j,nonce)
         block=plaintext[j*64:j*64+64]
         encrypted_message+=bytes(a^b for a,b in zip(block,key_stream))

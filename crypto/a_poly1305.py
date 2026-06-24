@@ -4,8 +4,8 @@ from crypto.a_chacha20 import chacha20_block
 def le_bytes_to_num(b):
     return int.from_bytes(b,"little")
 
-def num_to_16_le_bytes(num):
-    return num.to_bytes(16,"little")
+def num_to_n_le_bytes(num,n):
+    return num.to_bytes(n,"little")
 
 def poly1305_mac(msg, key):
     r = le_bytes_to_num(key[:16])
@@ -18,7 +18,7 @@ def poly1305_mac(msg, key):
         a += n
         a = (r * a) % p
     a = (a + s) % (1 << 128)
-    return num_to_16_le_bytes(a)
+    return num_to_n_le_bytes(a,16)
 
 def poly1305_key_gen(key,nonce):
     counter = 0
