@@ -3,11 +3,11 @@ import os
 
 sys.path.append(
     os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "crypto")
+        os.path.join(os.path.dirname(__file__), "..")
     )
 )
 
-from j_hmac import hmac_sha256
+from crypto.j_hmac import hmac_sha256
 
 
 def test_case(key, message, expected):

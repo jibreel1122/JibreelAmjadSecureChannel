@@ -3,11 +3,11 @@ import os
 
 sys.path.append(
     os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "crypto")
+        os.path.join(os.path.dirname(__file__), "..", )
     )
 )
 
-from j_transcript import build_handshake_transcript, transcript_hash, encode_field
+from protocol.j_transcript import build_handshake_transcript, transcript_hash, encode_field
 
 
 def test_case(name, fn):

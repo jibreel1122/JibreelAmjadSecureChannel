@@ -1,4 +1,4 @@
-from j_sha256 import sha256
+from crypto.j_sha256 import sha256
 
 
 def encode_field(data: bytes) -> bytes:

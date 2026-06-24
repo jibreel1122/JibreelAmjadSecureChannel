@@ -1,7 +1,7 @@
 import threading
 import tkinter as tk
 
-import j_client
+import network.j_client as j_client
 
 
 sock = None

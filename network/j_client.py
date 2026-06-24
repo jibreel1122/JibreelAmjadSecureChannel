@@ -1,9 +1,9 @@
 import socket
 import struct
 
-from j_transcript import build_handshake_transcript, transcript_hash
-from j_key_schedule import derive_keys
-from j_message import pack_message, unpack_message, make_associated_data
+from protocol.j_transcript import build_handshake_transcript, transcript_hash
+from protocol.j_key_schedule import derive_keys
+from protocol.j_message import pack_message, unpack_message, make_associated_data
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives import serialization

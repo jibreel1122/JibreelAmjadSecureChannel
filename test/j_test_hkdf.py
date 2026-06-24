@@ -3,11 +3,11 @@ import os
 
 sys.path.append(
     os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "crypto")
+        os.path.join(os.path.dirname(__file__), "..")
     )
 )
 
-from j_hkdf import hkdf_extract, hkdf_expand
+from crypto.j_hkdf import hkdf_extract, hkdf_expand
 
 
 def test_case(name, ikm, salt, info, length, exp_prk, exp_okm):

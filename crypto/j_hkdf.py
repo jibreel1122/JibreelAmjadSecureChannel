@@ -1,4 +1,4 @@
-from j_hmac import hmac_sha256
+from crypto.j_hmac import hmac_sha256
 
 HASH_LEN = 32
 

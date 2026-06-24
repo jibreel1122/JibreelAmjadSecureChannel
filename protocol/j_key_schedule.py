@@ -1,4 +1,4 @@
-from j_hkdf import hkdf
+from crypto.j_hkdf import hkdf
 
 
 def derive_keys(shared_secret: bytes, transcript_hash: bytes) -> dict:
