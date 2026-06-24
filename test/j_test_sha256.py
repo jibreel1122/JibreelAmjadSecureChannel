@@ -10,33 +10,35 @@ sys.path.append(
 from crypto.j_sha256 import sha256
 
 
-def test_case(message, expected):
-    result = sha256(message.encode()).hex()
+def test_case(name, message, expected):
+    result = sha256(message).hex()
 
-    print(f"Testing: {message}")
-
+    print("Testing:", name)
     if result == expected:
         print("PASS\n")
+        return True
     else:
         print("FAIL")
         print("Expected:", expected)
         print("Got     :", result)
         print()
+        return False
 
 
 if __name__ == "__main__":
+    cases = [
+        ("empty string", b"",
+         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+        ("abc", b"abc",
+         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"),
+        ("two block message",
+         b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+         "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"),
+    ]
 
-    test_case(
-        "jibreel",
-        "f11b89f74b77333322a46a4b042b990f03c1e27eda2f4429d4229ebba5bcac7b"
-)
+    passed = 0
+    for name, message, expected in cases:
+        if test_case(name, message, expected):
+            passed = passed + 1
 
-    test_case(
-        "amjad",
-        "ffc8a893622c8529e4b933e5491369c3a29c3f006c8ca337e5fbd23d6f9f0cc0"
-    )
-
-    test_case(
-        "110 out of 100",
-        "c3f31fa7cb1006ff82aeb6ff44cad39996a2b4c3999d912aae23545239bc266d"
-    )
+    print("sha256 tests passed", passed, "of", len(cases))
