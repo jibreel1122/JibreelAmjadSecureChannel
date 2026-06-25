@@ -1,44 +1,76 @@
 import struct
 
+PROTOCOL_VERSION = 1
+MESSAGE_TYPE_CHAT = 1
 
-def make_associated_data(sequence_number):
-    return struct.pack(">Q", sequence_number)
+
+def make_header(msg_type, sender_id, seq):
+    sender_bytes = sender_id.encode()
+    header = bytes([PROTOCOL_VERSION])
+    header += bytes([msg_type])
+    header += len(sender_bytes).to_bytes(2, "big")
+    header += sender_bytes
+    header += struct.pack(">Q", seq)
+    return header
 
 
-def pack_message(sequence_number, ciphertext, authentication_tag):
-    if len(authentication_tag) != 16:
-        raise ValueError("authentication tag must be exactly 16 bytes")
-    print("packing message seq", sequence_number)
-    seq_bytes = struct.pack(">Q", sequence_number)
-    length_bytes = struct.pack(">I", len(ciphertext))
-    return seq_bytes + length_bytes + ciphertext + authentication_tag
+def read_header(header):
+    version = header[0]
+    msg_type = header[1]
+    sender_len = struct.unpack(">H", header[2:4])[0]
+    sender_id = header[4:4 + sender_len].decode()
+    seq = struct.unpack(">Q", header[4 + sender_len:12 + sender_len])[0]
+    return version, msg_type, sender_id, seq
+
+
+def pack_message(header, cipher, tag):
+    if len(tag) != 16:
+        raise ValueError("tag must be exactly 16 bytes")
+    print("packing message")
+    header_len_bytes = struct.pack(">H", len(header))
+    cipher_len_bytes = struct.pack(">I", len(cipher))
+    return header_len_bytes + header + cipher_len_bytes + cipher + tag
 
 
 def unpack_message(data):
-    if len(data) < 8 + 4 + 16:
+    if len(data) < 2:
         raise ValueError("data too short to be a valid message")
-    print("unpacking message of size", len(data))
-    sequence_number = struct.unpack(">Q", data[0:8])[0]
-    ciphertext_length = struct.unpack(">I", data[8:12])[0]
-    remaining = data[12:]
-    if ciphertext_length != len(remaining) - 16:
+    header_len = struct.unpack(">H", data[0:2])[0]
+    header = data[2:2 + header_len]
+    rest = data[2 + header_len:]
+    if len(rest) < 4 + 16:
+        raise ValueError("data too short to be a valid message")
+    cipher_len = struct.unpack(">I", rest[0:4])[0]
+    body = rest[4:]
+    if cipher_len != len(body) - 16:
         raise ValueError("declared ciphertext length does not match data")
-    ciphertext = remaining[:ciphertext_length]
-    authentication_tag = remaining[ciphertext_length:]
-    return sequence_number, ciphertext, authentication_tag
+    cipher = body[:cipher_len]
+    tag = body[cipher_len:]
+    print("unpacking message")
+    return header, cipher, tag
 
 
 if __name__ == "__main__":
-    print("crypto message test amjad qaher birzeit 2026")
+    print("crypto message test jibreel bornat birzeit 2026")
     seq = 7
+    sender_id = "jibreel-client"
     text = b"hello from birzeit crypto"
-    fake_tag = b"amjadqaher2026!!"
-    print("fake tag length", len(fake_tag))
-    wire = pack_message(seq, text, fake_tag)
-    print("wire bytes length", len(wire))
-    out_seq, out_text, out_tag = unpack_message(wire)
-    assert out_seq == seq
+    test_tag = b"jibreelbornat26!"
+
+    header = make_header(MESSAGE_TYPE_CHAT, sender_id, seq)
+    print("header bytes", header)
+
+    wire = pack_message(header, text, test_tag)
+    print("wire length", len(wire))
+
+    out_header, out_text, out_tag = unpack_message(wire)
+    out_version, out_type, out_sender_id, out_seq = read_header(out_header)
+
+    assert out_header == header
     assert out_text == text
-    assert out_tag == fake_tag
-    print("ad bytes", make_associated_data(seq))
-    print("round trip ok amjad qaher 2026")
+    assert out_tag == test_tag
+    assert out_version == PROTOCOL_VERSION
+    assert out_type == MESSAGE_TYPE_CHAT
+    assert out_sender_id == sender_id
+    assert out_seq == seq
+    print("round trip ok jibreel bornat 2026")
