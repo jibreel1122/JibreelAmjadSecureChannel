@@ -24,12 +24,12 @@ def recv_loop():
     global sock
     while sock is not None:
         try:
-            seq, pt = j_client.recv_secure(sock, keys["server_key"], keys["server_nonce_base"])
+            seq, sender_id, pt = j_client.recv_secure(sock, keys["server_key"], keys["server_nonce_base"])
         except Exception as e:
             set_status("disconnected: " + str(e))
             sock = None
             break
-        add_chat("peer: " + pt.decode())
+        add_chat(sender_id + ": " + pt.decode())
 
 
 def do_connect():
@@ -65,7 +65,7 @@ def send_clicked(event=None):
     if text == "":
         return
     try:
-        j_client.send_secure(sock, keys["client_key"], keys["client_nonce_base"], out_seq, text.encode())
+        j_client.send_secure(sock, keys["client_key"], keys["client_nonce_base"], out_seq, "jibreel-client", text.encode())
     except Exception as e:
         set_status("send failed: " + str(e))
         return
