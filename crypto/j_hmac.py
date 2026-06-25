@@ -17,9 +17,9 @@ def hmac_sha256(key: bytes, message: bytes) -> bytes:
     opad = bytes([b ^ 0x5C for b in key])
 
     inner_hash = sha256(ipad + message)
-    result = sha256(opad + inner_hash)
+    tag = sha256(opad + inner_hash)
 
-    return result
+    return tag
 
 
 def hmac_sha256_hex(key: bytes, message: bytes) -> str:
