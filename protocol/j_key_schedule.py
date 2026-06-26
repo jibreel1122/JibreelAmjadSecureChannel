@@ -2,16 +2,9 @@ from crypto.j_hkdf import hkdf
 
 
 def derive_keys(shared_secret: bytes, psk: bytes, transcript_hash: bytes) -> dict:
-    print("deriving client_key")
     client_key = hkdf(psk, shared_secret, b"client key", 32)
-
-    print("deriving server_key")
     server_key = hkdf(psk, shared_secret, b"server key", 32)
-
-    print("deriving client_nonce_base")
     client_nonce_base = hkdf(psk, shared_secret, b"client nonce", 12)
-
-    print("deriving server_nonce_base")
     server_nonce_base = hkdf(psk, shared_secret, b"server nonce", 12)
 
     keys = {

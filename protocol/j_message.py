@@ -26,7 +26,6 @@ def read_header(header):
 def pack_message(header, cipher, tag):
     if len(tag) != 16:
         raise ValueError("tag must be exactly 16 bytes")
-    print("packing message")
     header_len_bytes = struct.pack(">H", len(header))
     cipher_len_bytes = struct.pack(">I", len(cipher))
     return header_len_bytes + header + cipher_len_bytes + cipher + tag
@@ -46,7 +45,6 @@ def unpack_message(data):
         raise ValueError("declared ciphertext length does not match data")
     cipher = body[:cipher_len]
     tag = body[cipher_len:]
-    print("unpacking message")
     return header, cipher, tag
 
 
