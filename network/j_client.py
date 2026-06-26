@@ -59,13 +59,21 @@ def encrypt_message(key, nonce_base, seq, sender_id, plaintext):
     return pack_message(header, ct, tag)
 
 
+class AuthFailure(Exception):
+    pass
+
+
+class ReplayRejected(Exception):
+    pass
+
+
 def decrypt_message(key, nonce_base, frame):
     header, ct, tag = unpack_message(frame)
     _, _, sender_id, seq = read_header(header)
     constant, iv = make_constant_and_iv(nonce_base, seq)
     pt = chacha20_aead_decrypt(header, key, iv, constant, ct, tag)
     if pt is None:
-        raise ValueError("authentication failed: header or ciphertext was tampered")
+        raise AuthFailure("authentication failed: header or ciphertext was tampered")
     return seq, sender_id, pt
 
 
@@ -82,8 +90,8 @@ def recv_secure(sock, key, nonce_base):
     seq, sender_id, pt = decrypt_message(key, nonce_base, frame)
     expected = _expected_recv_seq.get(id(sock), 0)
     if seq != expected:
-        raise ValueError("replay or reordering detected "
-                         "(expected " + str(expected) + ", got " + str(seq) + ")")
+        raise ReplayRejected("replay or reordering detected "
+                             "(expected " + str(expected) + ", got " + str(seq) + ")")
     _expected_recv_seq[id(sock)] = expected + 1
     return seq, sender_id, pt
 

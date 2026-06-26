@@ -11,6 +11,7 @@ from network.j_client import (
     recv_frame,
     encrypt_message,
     decrypt_message,
+    AuthFailure,
 )
 
 
@@ -76,23 +77,27 @@ def main():
     while True:
         try:
             frame = recv_frame(conn)
-            seq, sender_id, plaintext = decrypt_message(keys["client_key"],
-                                                        keys["client_nonce_base"], frame)
-            if seq != recv_seq:
-                raise ValueError("replay or reordering detected "
-                                 "(expected " + str(recv_seq) + ", got " + str(seq) + ")")
-            recv_seq += 1
-            print("Client:", plaintext.decode())
-            if plaintext == b"quit":
-                break
-            reply = input("Server> ").encode()
-            frame = encrypt_message(keys["server_key"], keys["server_nonce_base"],
-                                    send_seq, SERVER_ID, reply)
-            send_frame(conn, frame)
-            send_seq += 1
         except Exception as e:
             print(e)
             break
+        try:
+            seq, sender_id, plaintext = decrypt_message(keys["client_key"],
+                                                        keys["client_nonce_base"], frame)
+        except AuthFailure:
+            print("Authentication failed: message discarded.")
+            continue
+        if seq != recv_seq:
+            print("Replay/reordered message rejected.")
+            continue
+        recv_seq += 1
+        print("Client:", plaintext.decode())
+        if plaintext == b"quit":
+            break
+        reply = input("Server> ").encode()
+        frame = encrypt_message(keys["server_key"], keys["server_nonce_base"],
+                                send_seq, SERVER_ID, reply)
+        send_frame(conn, frame)
+        send_seq += 1
     conn.close()
     server.close()
 

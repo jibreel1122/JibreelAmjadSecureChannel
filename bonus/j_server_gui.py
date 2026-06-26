@@ -7,7 +7,7 @@ import tkinter as tk
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import network.a_server as a_server
-from network.j_client import send_frame, recv_frame, encrypt_message, decrypt_message
+from network.j_client import send_frame, recv_frame, encrypt_message, decrypt_message, AuthFailure
 
 
 listener = None
@@ -33,15 +33,18 @@ def recv_loop():
     while conn is not None:
         try:
             frame = recv_frame(conn)
-            seq, sender_id, pt = decrypt_message(keys["client_key"], keys["client_nonce_base"], frame)
         except Exception as e:
             set_status("disconnected: " + str(e))
             conn = None
             break
+        try:
+            seq, sender_id, pt = decrypt_message(keys["client_key"], keys["client_nonce_base"], frame)
+        except AuthFailure:
+            set_status("Authentication failed: message discarded.")
+            continue
         if seq != recv_seq:
-            set_status("replay or reordering detected (expected " + str(recv_seq) + ", got " + str(seq) + ")")
-            conn = None
-            break
+            set_status("Replay/reordered message rejected.")
+            continue
         recv_seq = recv_seq + 1
         add_chat(sender_id + ": " + pt.decode())
 

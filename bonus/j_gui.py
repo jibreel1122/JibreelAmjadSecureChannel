@@ -30,6 +30,12 @@ def recv_loop():
     while sock is not None:
         try:
             seq, sender_id, pt = j_client.recv_secure(sock, keys["server_key"], keys["server_nonce_base"])
+        except j_client.AuthFailure:
+            set_status("Authentication failed: message discarded.")
+            continue
+        except j_client.ReplayRejected:
+            set_status("Replay/reordered message rejected.")
+            continue
         except Exception as e:
             set_status("disconnected: " + str(e))
             sock = None
