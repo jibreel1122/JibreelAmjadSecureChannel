@@ -102,6 +102,29 @@ def send_tampered_clicked(event=None):
     set_status("sent a message with one flipped tag byte, watch the server reject it")
 
 
+def send_tampered_header_clicked(event=None):
+    global out_seq
+    if sock is None:
+        set_status("not connected")
+        return
+    text = msg_entry.get()
+    if text == "":
+        text = "tampered header message"
+    try:
+        frame = j_client.encrypt_message(keys["client_key"], keys["client_nonce_base"], out_seq, "jibreel-client", text.encode())
+        header, cipher, tag = unpack_message(frame)
+        bad_header = header[:1] + bytes([header[1] ^ 0x01]) + header[2:]
+        bad_frame = pack_message(bad_header, cipher, tag)
+        j_client.send_frame(sock, bad_frame)
+    except Exception as e:
+        set_status("send failed: " + str(e))
+        return
+    out_seq = out_seq + 1
+    add_chat("me (tampered header): " + text)
+    msg_entry.delete(0, "end")
+    set_status("sent a message with one flipped header bit, watch the server reject it")
+
+
 if __name__ == "__main__":
     print("crypto gui by jibreel bornat 2026")
 
@@ -136,5 +159,8 @@ if __name__ == "__main__":
 
     tamper_btn = tk.Button(root, text="Send tampered tag", command=send_tampered_clicked)
     tamper_btn.grid(row=4, column=0, columnspan=5)
+
+    tamper_header_btn = tk.Button(root, text="Send tampered header", command=send_tampered_header_clicked)
+    tamper_header_btn.grid(row=5, column=0, columnspan=5)
 
     root.mainloop()
