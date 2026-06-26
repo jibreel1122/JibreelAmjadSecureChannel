@@ -4,7 +4,6 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from crypto.a_aead_chacha20_poly1305 import chacha20_aead_decrypt
-
 number_of_tests = 1
 
 def test__model(i, aad, key, iv, constant, plaintext, ciphertext, tag):

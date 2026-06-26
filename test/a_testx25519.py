@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from crypto.a_x22519 import x25519
+from crypto.a_x25519 import x25519
 
 number_of_tests = 2
 

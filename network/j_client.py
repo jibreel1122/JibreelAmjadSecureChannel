@@ -1,10 +1,9 @@
 import socket
 import struct
 
+from protocol.a_handshake import HandshakeState
 from protocol.j_message import pack_message, unpack_message, make_header, read_header, MESSAGE_TYPE_CHAT
-
 from crypto.a_aead_chacha20_poly1305 import chacha20_aead_encrypt, chacha20_aead_decrypt
-from protocol.a_handshake import do_handshake
 
 
 def send_frame(sock, data):
@@ -69,12 +68,38 @@ def recv_secure(sock, key, nonce_base):
     return seq, sender_id, pt
 
 
-def run_client(ip="127.0.0.1", port=9999, client_id="jibreel-client", server_id="server"):
+def do_client_handshake(sock, handshake_state):
+    # Message 1 (Initiator -> Responder)
+    msg1 = handshake_state.write_message()
+    send_frame(sock, msg1)
+
+    # Message 2 (Responder -> Initiator)
+    msg2 = recv_frame(sock)
+    handshake_state.read_message(msg2)
+
+    # Message 3 (Initiator -> Responder)
+    msg3 = handshake_state.write_message()
+    send_frame(sock, msg3)
+
+    # Split returns two CipherState objects (send, recv)
+    send_cipher, recv_cipher = handshake_state.split()
+
+    # Extract keys and provide standard 12-byte zeroed nonces for your custom loop
+    return {
+        "client_key": send_cipher.k,
+        "server_key": recv_cipher.k,
+        "client_nonce_base": b"\x00" * 12,
+        "server_nonce_base": b"\x00" * 12
+    }
+
+
+def run_client(ip="127.0.0.1", port=8000, client_id="jibreel-client", server_id="server"):
     sock = connect(ip, port)
-    keys = do_handshake(sock, client_id, server_id)
+    handshake = HandshakeState()
+    handshake.initialize(initiator=True)
+    keys = do_client_handshake(sock, handshake)
     print("handshake completed")
     print("secure channel ready")
-
     seq = 0
     while True:
         text = input("message: ")
@@ -85,7 +110,6 @@ def run_client(ip="127.0.0.1", port=9999, client_id="jibreel-client", server_id=
         seq = seq + 1
         in_seq, sender_id, pt = recv_secure(sock, keys["server_key"], keys["server_nonce_base"])
         print("message from", sender_id, ":", pt.decode())
-
     sock.close()
     print("connection closed")
 
