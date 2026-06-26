@@ -6,6 +6,7 @@ import tkinter as tk
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import network.j_client as j_client
+from protocol.j_message import unpack_message, pack_message
 
 
 sock = None
@@ -78,6 +79,29 @@ def send_clicked(event=None):
     msg_entry.delete(0, "end")
 
 
+def send_tampered_clicked(event=None):
+    global out_seq
+    if sock is None:
+        set_status("not connected")
+        return
+    text = msg_entry.get()
+    if text == "":
+        text = "tampered message"
+    try:
+        frame = j_client.encrypt_message(keys["client_key"], keys["client_nonce_base"], out_seq, "jibreel-client", text.encode())
+        header, cipher, tag = unpack_message(frame)
+        bad_tag = bytes([tag[0] ^ 0x01]) + tag[1:]
+        bad_frame = pack_message(header, cipher, bad_tag)
+        j_client.send_frame(sock, bad_frame)
+    except Exception as e:
+        set_status("send failed: " + str(e))
+        return
+    out_seq = out_seq + 1
+    add_chat("me (tampered tag): " + text)
+    msg_entry.delete(0, "end")
+    set_status("sent a message with one flipped tag byte, watch the server reject it")
+
+
 if __name__ == "__main__":
     print("crypto gui by jibreel bornat 2026")
 
@@ -109,5 +133,8 @@ if __name__ == "__main__":
 
     send_btn = tk.Button(root, text="Send", command=send_clicked)
     send_btn.grid(row=3, column=4)
+
+    tamper_btn = tk.Button(root, text="Send tampered tag", command=send_tampered_clicked)
+    tamper_btn.grid(row=4, column=0, columnspan=5)
 
     root.mainloop()
