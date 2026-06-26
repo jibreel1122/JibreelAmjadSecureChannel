@@ -1,8 +1,32 @@
+"""
+Handshake state machine.
+
+This module wraps a Noise_XX-style message flow that we use only to transport
+the two ephemeral X25519 public keys between the parties. The Noise
+SymmetricState/CipherState plumbing (mix_hash, mix_key, encrypt_and_hash) runs
+during the three message rounds, but its split() output is NOT what secures the
+application channel.
+
+The actual session keys come from the project key schedule: once both ephemeral
+public keys are known, each side authenticates the handshake with
+HMAC(PSK, transcript) and derives the directional keys + nonce bases with HKDF
+using the PSK as salt (see derive_session_keys() -> protocol.j_key_schedule).
+The captured ephemeral-ephemeral shared secret (self.ee_shared) is the IKM for
+that derivation.
+
+In short: Noise here is an ephemeral-key transport; PSK + HKDF is the security.
+Keeping the Noise wrapper lets the wire format stay close to a real handshake
+while the key schedule follows the spec exactly.
+"""
+
 from protocol.a_symmetricstate import SymmetricState
 from protocol.a_keypair import generate_keypair, public_key
 from crypto.a_x25519 import x25519
+from protocol.j_transcript import build_handshake_transcript, transcript_hash
+from protocol.j_key_schedule import derive_keys
 
 PROTOCOL_NAME = b"Noise_XX_25519_ChaChaPoly_SHA256"
+PROTOCOL_INFO = "SecureChannel-v1"
 STATIC_KEY_SIZE = 32
 TAG_SIZE = 16
 
@@ -19,8 +43,12 @@ class HandshakeState:
         self.re = None
         self.initiator = True
         self.message_pattern = 0
+        self.psk = b""
+        self.client_id = ""
+        self.server_id = ""
+        self.ee_shared = None
 
-    def initialize(self, initiator: bool, s=None, rs=None):
+    def initialize(self, initiator: bool, s=None, rs=None, psk=b"", client_id="", server_id=""):
         self.initiator = initiator
         self.symmetric.initialize_symmetric(PROTOCOL_NAME)
         if s is None:
@@ -33,6 +61,10 @@ class HandshakeState:
         self.e_pub = None
         self.re = None
         self.message_pattern = 0
+        self.psk = psk
+        self.client_id = client_id
+        self.server_id = server_id
+        self.ee_shared = None
 
     def dh(self, private_key, public_key):
         return x25519(private_key, public_key)
@@ -42,9 +74,7 @@ class HandshakeState:
             if not self.initiator:
                 self.re = message[:32]
                 self.symmetric.mix_hash(self.re)
-                payload = message[32:]
-                if payload:
-                    payload = self.symmetric.decrypt_and_hash(payload)
+                payload = self.symmetric.decrypt_and_hash(message[32:])
                 self.message_pattern = 1
                 return payload
             raise RuntimeError("Unexpected handshake state")
@@ -57,6 +87,7 @@ class HandshakeState:
             index += 32
             self.symmetric.mix_hash(self.re)
             shared = self.dh(self.e, self.re)
+            self.ee_shared = shared
             self.symmetric.mix_key(shared)
 
             encrypted_static = message[index:index + STATIC_KEY_SIZE + TAG_SIZE]
@@ -105,6 +136,7 @@ class HandshakeState:
             message += self.e_pub
             self.symmetric.mix_hash(self.e_pub)
             shared = self.dh(self.e, self.re)
+            self.ee_shared = shared
             self.symmetric.mix_key(shared)
             encrypted_static = self.symmetric.encrypt_and_hash(self.s_pub)
             message += encrypted_static
@@ -127,8 +159,22 @@ class HandshakeState:
 
         raise RuntimeError("Unexpected handshake state")
 
+    def transcript(self):
+        # Both ephemeral public keys ordered as (client, server) so that the
+        # initiator and the responder build the exact same transcript bytes.
+        if self.initiator:
+            client_pub, server_pub = self.e_pub, self.re
+        else:
+            client_pub, server_pub = self.re, self.e_pub
+        return build_handshake_transcript(
+            PROTOCOL_INFO, self.client_id, self.server_id, client_pub, server_pub
+        )
+
+    def derive_session_keys(self):
+        # Spec key schedule: HKDF over the ephemeral-ephemeral shared secret with
+        # the PSK as the salt, producing the two directional keys + nonce bases.
+        th = transcript_hash(self.transcript())
+        return derive_keys(self.ee_shared, self.psk, th)
+
     def split(self):
-        send_cipher, recv_cipher = self.symmetric.split()
-        if not self.initiator:
-            send_cipher, recv_cipher = recv_cipher, send_cipher
-        return send_cipher, recv_cipher
+        return self.derive_session_keys()
