@@ -102,10 +102,9 @@ def send_tampered_clicked(event=None):
     except Exception as e:
         set_status("send failed: " + str(e))
         return
-    out_seq = out_seq + 1
     add_chat("me (tampered tag): " + text)
     msg_entry.delete(0, "end")
-    set_status("sent a message with one flipped tag byte, watch the server reject it")
+    set_status("sent a message with one flipped tag byte, seq " + str(out_seq) + " not consumed")
 
 
 def send_tampered_header_clicked(event=None):
@@ -125,10 +124,9 @@ def send_tampered_header_clicked(event=None):
     except Exception as e:
         set_status("send failed: " + str(e))
         return
-    out_seq = out_seq + 1
     add_chat("me (tampered header): " + text)
     msg_entry.delete(0, "end")
-    set_status("sent a message with one flipped header bit, watch the server reject it")
+    set_status("sent a message with one flipped header bit, seq " + str(out_seq) + " not consumed")
 
 
 if __name__ == "__main__":
