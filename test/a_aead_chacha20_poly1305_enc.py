@@ -3,21 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from crypto.a_aead_chacha20_poly1305 import chacha20_aead_encrypt
+from crypto.a_aead_chacha20_poly1305 import chacha20_aead_decrypt
 
 number_of_tests = 1
 
 def test__model(i, aad, key, iv, constant, plaintext, ciphertext, tag):
-    result_ciphertext, result_tag = chacha20_aead_encrypt(
-        aad,
-        key,
-        iv,
-        constant,
-        plaintext
-    )
+    result_plaintext= chacha20_aead_decrypt(aad, key,iv,constant,ciphertext,tag)
 
-    assert result_ciphertext == ciphertext
-    assert result_tag == tag
+    assert result_plaintext == plaintext
 
     print(f"Test Vector #{i+1} PASSED")
 
