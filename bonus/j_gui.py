@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     tk.Label(root, text="Port").grid(row=0, column=2)
     port_entry = tk.Entry(root)
-    port_entry.insert(0, "9999")
+    port_entry.insert(0, "8000")
     port_entry.grid(row=0, column=3)
 
     connect_btn = tk.Button(root, text="Connect", command=connect_clicked)
