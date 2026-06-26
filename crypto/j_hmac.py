@@ -5,11 +5,9 @@ BLOCK_SIZE = 64
 
 def hmac_sha256(key: bytes, message: bytes) -> bytes:
 
-    # if key is longer than block size we hash it first
     if len(key) > BLOCK_SIZE:
         key = sha256(key)
 
-    # pad key with zeros to make it block size
     if len(key) < BLOCK_SIZE:
         key = key + b'\x00' * (BLOCK_SIZE - len(key))
 

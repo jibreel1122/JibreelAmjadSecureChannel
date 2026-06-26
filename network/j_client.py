@@ -1,9 +1,19 @@
+import os
 import socket
 import struct
 
 from protocol.a_handshake import HandshakeState
 from protocol.j_message import pack_message, unpack_message, make_header, read_header, MESSAGE_TYPE_CHAT
+from protocol.j_transcript import transcript_hash
 from crypto.a_aead_chacha20_poly1305 import chacha20_aead_encrypt, chacha20_aead_decrypt
+from crypto.j_hmac import hmac_sha256
+
+
+def load_psk():
+    psk = os.environ.get("SECURECHANNEL_PSK")
+    if psk is not None:
+        return psk.encode()
+    return b"birzeit-encs4320-demo-psk"
 
 
 def send_frame(sock, data):
@@ -54,6 +64,8 @@ def decrypt_message(key, nonce_base, frame):
     _, _, sender_id, seq = read_header(header)
     constant, iv = make_constant_and_iv(nonce_base, seq)
     pt = chacha20_aead_decrypt(header, key, iv, constant, ct, tag)
+    if pt is None:
+        raise ValueError("authentication failed: header or ciphertext was tampered")
     return seq, sender_id, pt
 
 
@@ -62,42 +74,49 @@ def send_secure(sock, key, nonce_base, seq, sender_id, plaintext):
     send_frame(sock, frame)
 
 
+_expected_recv_seq = {}
+
+
 def recv_secure(sock, key, nonce_base):
     frame = recv_frame(sock)
     seq, sender_id, pt = decrypt_message(key, nonce_base, frame)
+    expected = _expected_recv_seq.get(id(sock), 0)
+    if seq != expected:
+        raise ValueError("replay or reordering detected "
+                         "(expected " + str(expected) + ", got " + str(seq) + ")")
+    _expected_recv_seq[id(sock)] = expected + 1
     return seq, sender_id, pt
 
 
 def do_client_handshake(sock, handshake_state):
-    # Message 1 (Initiator -> Responder)
     msg1 = handshake_state.write_message()
     send_frame(sock, msg1)
 
-    # Message 2 (Responder -> Initiator)
     msg2 = recv_frame(sock)
     handshake_state.read_message(msg2)
 
-    # Message 3 (Initiator -> Responder)
-    msg3 = handshake_state.write_message()
+    th = transcript_hash(handshake_state.transcript())
+    server_tag = recv_frame(sock)
+    if server_tag != hmac_sha256(handshake_state.psk, th):
+        raise ValueError("handshake authentication failed: bad PSK or man-in-the-middle")
+
+    client_tag = hmac_sha256(handshake_state.psk, th)
+    msg3 = handshake_state.write_message(client_tag)
     send_frame(sock, msg3)
 
-    # Split returns two CipherState objects (send, recv)
-    send_cipher, recv_cipher = handshake_state.split()
+    return handshake_state.split()
 
-    # Extract keys and provide standard 12-byte zeroed nonces for your custom loop
-    return {
-        "client_key": send_cipher.k,
-        "server_key": recv_cipher.k,
-        "client_nonce_base": b"\x00" * 12,
-        "server_nonce_base": b"\x00" * 12
-    }
+
+def do_handshake(sock, client_id="jibreel-client", server_id="server"):
+    handshake = HandshakeState()
+    handshake.initialize(initiator=True, psk=load_psk(),
+                         client_id=client_id, server_id=server_id)
+    return do_client_handshake(sock, handshake)
 
 
 def run_client(ip="127.0.0.1", port=8000, client_id="jibreel-client", server_id="server"):
     sock = connect(ip, port)
-    handshake = HandshakeState()
-    handshake.initialize(initiator=True)
-    keys = do_client_handshake(sock, handshake)
+    keys = do_handshake(sock, client_id, server_id)
     print("handshake completed")
     print("secure channel ready")
     seq = 0
