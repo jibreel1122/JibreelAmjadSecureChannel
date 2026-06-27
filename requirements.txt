@@ -1,0 +1,12 @@
+No third-party dependencies were used.
+
+Standard library modules used:
+- os
+- sys
+- math
+- struct
+- socket
+- threading
+- subprocess
+- hashlib
+- tkinter
