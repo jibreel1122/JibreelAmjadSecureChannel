@@ -51,22 +51,17 @@ def montgomery_ladder(k, u):
         D = (x_3 - z_3) % P
         DA = (D * Ap) % P
         CB = (C * B) % P
-
         x_3 = ((DA + CB) * (DA + CB)) % P
         z_3 = (x_1 * ((DA - CB) * (DA - CB) % P)) % P
         x_2 = (AA * BB) % P
         z_2 = (E * (AA + a24 * E)) % P
-
     x_2, x_3 = cswap(swap, x_2, x_3)
     z_2, z_3 = cswap(swap, z_2, z_3)
-
     # Affine x-coordinate
     x = (x_2 * pow(z_2, P - 2, P)) % P
-
     # RFC 7748 encoding
     result = bytearray(x.to_bytes(32, "little"))
     result[31] &= 0x7F
-
     return bytes(result)
 
 def x25519(k, u):

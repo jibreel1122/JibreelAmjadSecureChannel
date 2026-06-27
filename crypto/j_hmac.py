@@ -7,13 +7,10 @@ def hmac_sha256(key: bytes, message: bytes) -> bytes:
 
     if len(key) > BLOCK_SIZE:
         key = sha256(key)
-
     if len(key) < BLOCK_SIZE:
         key = key + b'\x00' * (BLOCK_SIZE - len(key))
-
     ipad = bytes([b ^ 0x36 for b in key])
     opad = bytes([b ^ 0x5C for b in key])
-
     inner_hash = sha256(ipad + message)
     tag = sha256(opad + inner_hash)
 
@@ -27,5 +24,4 @@ def hmac_sha256_hex(key: bytes, message: bytes) -> str:
 if __name__ == "__main__":
     k = input("Key: ")
     msg = input("Message: ")
-
     print(hmac_sha256_hex(k.encode(), msg.encode()))

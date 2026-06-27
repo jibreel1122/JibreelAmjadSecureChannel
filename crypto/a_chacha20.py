@@ -14,15 +14,12 @@ def Qround(a,b,c,d):
     a=(a+b)&max_int
     d^=a
     d=rotl(d,16)
-
     c=(c+d)&max_int
     b^=c
     b=rotl(b,12)
-
     a=(a+b)&max_int
     d^=a
     d=rotl(d,8)
-
     c=(c+d)&max_int
     b^=c
     b=rotl(b,7)

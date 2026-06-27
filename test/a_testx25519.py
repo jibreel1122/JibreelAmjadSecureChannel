@@ -56,9 +56,4 @@ list_of_tests = [
 
 
 for i in range(number_of_tests):
-    test__model(
-        i,
-        list_of_tests[i][0],
-        list_of_tests[i][1],
-        list_of_tests[i][2]
-    )
+    test__model(i,list_of_tests[i][0],list_of_tests[i][1],list_of_tests[i][2])

@@ -101,7 +101,7 @@ if __name__ == "__main__":
     print("crypto server gui by jibreel bornat 2026")
 
     root = tk.Tk()
-    root.title("crypto chat - server")
+    root.title("Crypto Chat - Server")
 
     tk.Label(root, text="Port").grid(row=0, column=0)
     port_entry = tk.Entry(root)

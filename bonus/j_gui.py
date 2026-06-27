@@ -133,7 +133,7 @@ if __name__ == "__main__":
     print("crypto gui by jibreel bornat 2026")
 
     root = tk.Tk()
-    root.title("crypto chat")
+    root.title("Crypto Chat - Client")
 
     tk.Label(root, text="IP").grid(row=0, column=0)
     ip_entry = tk.Entry(root)

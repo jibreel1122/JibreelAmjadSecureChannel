@@ -8,7 +8,6 @@ def test__model(i,key, nonce,counter,plaintext,ciphertext):
     assert result == ciphertext
     print(f"Test Vector #{i+1} PASSED")
 list_of_tests = [
-
     (
         bytes(32),
         bytes(12),

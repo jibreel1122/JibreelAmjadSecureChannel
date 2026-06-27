@@ -80,8 +80,6 @@ def decrypt_message(key, nonce_base, frame):
 def send_secure(sock, key, nonce_base, seq, sender_id, plaintext):
     frame = encrypt_message(key, nonce_base, seq, sender_id, plaintext)
     send_frame(sock, frame)
-
-
 _expected_recv_seq = {}
 
 
@@ -99,15 +97,12 @@ def recv_secure(sock, key, nonce_base):
 def do_client_handshake(sock, handshake_state):
     msg1 = handshake_state.write_message()
     send_frame(sock, msg1)
-
     msg2 = recv_frame(sock)
     handshake_state.read_message(msg2)
-
     th = transcript_hash(handshake_state.transcript())
     server_tag = recv_frame(sock)
     if server_tag != hmac_sha256(handshake_state.psk, th):
         raise ValueError("handshake authentication failed: bad PSK or man-in-the-middle")
-
     client_tag = hmac_sha256(handshake_state.psk, th)
     msg3 = handshake_state.write_message(client_tag)
     send_frame(sock, msg3)

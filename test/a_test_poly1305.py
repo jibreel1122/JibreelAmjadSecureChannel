@@ -4,14 +4,12 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from crypto.a_poly1305 import poly1305_mac
-
 number_of_tests = 11
 
 def test__model(i, key, msg, tag):
     result = poly1305_mac(msg, key)
     assert result == tag
     print(f"Test Vector #{i+1} PASSED")
-
 list_of_tests = [
     (
         bytes(32),
@@ -169,9 +167,4 @@ list_of_tests = [
 ]
 
 for i in range(number_of_tests):
-    test__model(
-        i,
-        list_of_tests[i][0],
-        list_of_tests[i][1],
-        list_of_tests[i][2]
-    )
+    test__model(i,list_of_tests[i][0],list_of_tests[i][1],list_of_tests[i][2])

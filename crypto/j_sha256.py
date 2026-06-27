@@ -56,51 +56,28 @@ def big_sigma1(x):
 
 def pad_message(message):
     bit_length = len(message) * 8
-
     padded = bytearray(message)
     padded.append(0x80)
-
     while len(padded) % 64!=56:
         padded.append(0 )
-
     padded += struct.pack(">Q", bit_length)
-
     return bytes(padded)
 
 
-def sha256(message: bytes) -> bytes:
+def sha256(message: bytes):
     message = pad_message(message)
-
     h = INITIAL_HASH.copy()
     for i in range(0, len(message), 64):
         block = message[i:i + 64]
-
         w = list(struct.unpack(">16I", block))
-
         for j in range(16, 64):
-            value = (
-                small_sigma1(w[j - 2]) + w[j - 7] +
-                small_sigma0(w[j - 15]) + w[j - 16]
-            ) & 0xFFFFFFFF
-
+            value = (small_sigma1(w[j - 2]) + w[j - 7] +small_sigma0(w[j - 15]) + w[j - 16]) & 0xFFFFFFFF
             w.append(value)
-
         a, b, c, d, e, f, g, h_var = h
-
         for j in range(64):
-            t1 = (
-                h_var
-                + big_sigma1(e)
-                + ch(e, f, g)
-                + K[j]
-                + w[j]
-            ) & 0xFFFFFFFF
-
-            t2 = (
-                big_sigma0(a)
-                + maj(a, b, c)
-            ) & 0xFFFFFFFF
-
+            t1 = (h_var+ big_sigma1(e)+ ch(e, f, g)+ K[j]
+                + w[j])&0xFFFFFFFF
+            t2=(big_sigma0(a)+ maj(a, b, c)) & 0xFFFFFFFF
             h_var = g
             g = f
             f = e
@@ -109,7 +86,6 @@ def sha256(message: bytes) -> bytes:
             c = b
             b = a
             a = (t1 + t2) & 0xFFFFFFFF
-
         h[0] = (h[0] + a) & 0xFFFFFFFF
         h[1] = (h[1] + b) & 0xFFFFFFFF
         h[2] = (h[2] + c) & 0xFFFFFFFF
@@ -118,7 +94,6 @@ def sha256(message: bytes) -> bytes:
         h[5] = (h[5] + f) & 0xFFFFFFFF
         h[6] = (h[6] + g) & 0xFFFFFFFF
         h[7] = (h[7] + h_var) & 0xFFFFFFFF
-
     return b"".join(struct.pack(">I", value) for value in h)
 
 
@@ -129,6 +104,5 @@ def sha256_hex(message: bytes) -> str:
 
 if __name__ == "__main__":
      msg = input("Message: ")
-
      print(sha256(msg.encode()).hex())
 

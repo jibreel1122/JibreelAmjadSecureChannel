@@ -9,14 +9,9 @@ number_of_tests = 1
 
 def test__model(i, aad, key, iv, constant, ciphertext, tag, plaintext):
     result_plaintext = chacha20_aead_decrypt(aad,key,iv,constant,ciphertext,tag)
-
     assert result_plaintext == plaintext
-
     print(f"Test Vector #{i+1} PASSED")
-
-
 list_of_tests = [
-
     (
         bytes.fromhex(
             "f33388860000000000004e91"
@@ -77,13 +72,4 @@ list_of_tests = [
 ]
 
 for i in range(number_of_tests):
-    test__model(
-        i,
-        list_of_tests[i][0],
-        list_of_tests[i][1],
-        list_of_tests[i][2],
-        list_of_tests[i][3],
-        list_of_tests[i][4],
-        list_of_tests[i][5],
-        list_of_tests[i][6]
-    )
+    test__model(i,list_of_tests[i][0],list_of_tests[i][1],list_of_tests[i][2],list_of_tests[i][3],list_of_tests[i][4],list_of_tests[i][5],list_of_tests[i][6])
