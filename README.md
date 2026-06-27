@@ -33,31 +33,35 @@ All cryptographic algorithms were implemented manually according to their offici
 
 SecureChannel/
 ├── crypto/
-│   ├── SHA-256
-│   ├── HMAC-SHA256
-│   ├── HKDF
-│   ├── X25519
-│   ├── ChaCha20
-│   ├── Poly1305
-│   └── ChaCha20-Poly1305 AEAD
+│   ├── sha256.py
+│   ├── hmac_sha256.py
+│   ├── hkdf.py
+│   ├── x25519.py
+│   ├── chacha20.py
+│   ├── poly1305.py
+│   └── chacha20_poly1305.py
+│
 ├── protocol/
-│   ├── Handshake
-│   ├── Key schedule
-│   ├── Transcript
-│   ├── Message format
-│   └── Cipher state
+│   ├── handshake.py
+│   ├── key_schedule.py
+│   ├── transcript.py
+│   ├── message.py
+│   └── cipher_state.py
+│
 ├── network/
-│   ├── Client
-│   ├── Server
-│   └── TCP framing
+│   ├── client.py
+│   ├── server.py
+│   └── framing.py
+│
 ├── bonus/
-│   ├── Client GUI
-│   ├── Server GUI
-│   └── Launcher
+│   ├── client_gui.py
+│   ├── server_gui.py
+│   └── launcher.py
+│
 ├── test/
-│   └── Official RFC/FIPS test vectors
+│   └── test_vectors/
+│
 └── README.md
-
 ## Protocol Overview
 
 The protocol consists of two phases.
